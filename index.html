@@ -107,7 +107,6 @@
     text-wrap: balance;
   }
   .hint { margin: 0; color: var(--muted); font-size: 15px; }
-  .sub-label { font-weight: 500; font-size: 15px; margin-top: 4px; }
   .group-title { font-family: var(--font-display); font-weight: 600; font-size: 18px; }
   .picked {
     display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
@@ -371,10 +370,7 @@
             <label><input type="radio" name="art" id="art1" value="ภาพการ์ตูนน่ารัก" checked> การ์ตูนน่ารัก</label>
             <label><input type="radio" name="art" id="art2" value="ภาพกึ่งสมจริง"> กึ่งสมจริง</label>
             <label><input type="radio" name="art" id="art3" value="ภาพสีสันสดใส"> สีสันสดใส</label>
-            <label><input type="radio" name="art" id="art4" value="__custom"> กำหนดเอง</label>
           </div>
-          <label for="artCustom" class="sub-label">พิมพ์รูปแบบภาพเพิ่มเติมเอง <span class="sub">ไม่บังคับ</span></label>
-          <input type="text" id="artCustom" autocomplete="off" placeholder="เช่น โทนสีพาสเทล ลายเส้นดินสอ ภาพสีน้ำ ตัวละครหัวโต">
         </fieldset>
 
         <hr>
@@ -594,11 +590,7 @@
       subChars: readChars("sub"),
       moral: $("moral").value.trim(),
       level: radio("level"),
-      art: (function () {
-        var base = radio("art"), extra = $("artCustom").value.trim();
-        if (base === "__custom") { return extra || "ภาพที่ AI เลือกให้เหมาะกับเด็ก"; }
-        return extra ? base + " (เพิ่มเติม: " + extra + ")" : base;
-      })(),
+      art: radio("art"),
       series: $("series").value === "__custom" ? $("seriesCustom").value.trim() : $("series").value,
       volume: $("volume").value.trim(),
       bookTitle: $("bookTitle").value.trim(),
@@ -648,8 +640,7 @@
     L.push("9) ใช้ตัวละครหลัก " + d.mainChars.length + " ตัว และตัวละครรอง " + d.subChars.length + " ตัว ตามที่ครูกำหนด ไม่เพิ่มตัวละครที่มีชื่อขึ้นเอง ตัวละครหลักต้องปรากฏเกือบทุกหน้า ตัวละครรองทุกตัวต้องมีบทบาทในเรื่องอย่างน้อย 1 ตอน");
     L.push("   ใช้เพศของตัวละครตามที่ครูกำหนด ทั้งคำเรียก คำสรรพนาม และภาพประกอบ");
     L.push("   ให้ตัวละครทุกตัวมีรูปร่างหน้าตาและเสื้อผ้าเหมือนเดิมทุกหน้า และเขียนลักษณะนั้นซ้ำในแนวทางภาพประกอบของทุกหน้าที่ตัวละครนั้นปรากฏ");
-    L.push("10) ไฮไลต์คำพื้นฐานที่ครูกำหนดทุกคำ ทุกครั้งที่ปรากฏในเนื้อเรื่อง ด้วยตัวอักษรสีแดง หากแสดงสีไม่ได้ ให้ทำเป็นตัวหนาแทน และเขียนกำกับไว้ต้นเนื้อเรื่องว่า \"คำตัวหนาคือคำพื้นฐาน ให้พิมพ์เป็นสีแดงเมื่อจัดรูปเล่ม\" ไฮไลต์เฉพาะคำที่ครูกำหนดเท่านั้น ไม่ไฮไลต์คำอื่น");
-    L.push("11) ตรวจสอบการสะกดคำ ความเหมาะสมตามวัย และความสัมพันธ์ของเนื้อหาทุกหน้า ก่อนส่งคำตอบ");
+    L.push("10) ตรวจสอบการสะกดคำ ความเหมาะสมตามวัย และความสัมพันธ์ของเนื้อหาทุกหน้า ก่อนส่งคำตอบ");
     L.push("");
     L.push("3. โครงสร้างของหนังสือ");
     L.push("ส่วนหน้า (ไม่นับเลขหน้า)");
@@ -694,7 +685,6 @@
     L.push("- กระดาษ A4 แนวตั้ง มีหน้าเลข 1-" + n + " และมีปก คำนำ สารบัญ คณะผู้จัดทำ ปกหลัง แยกต่างหาก");
     L.push("- เนื้อหาไม่แน่นจนเกินไป มีพื้นที่ว่างเพียงพอ");
     L.push("- แนะนำแบบอักษรไทยอ่านง่าย เช่น TH Sarabun New ขนาดตัวอักษรเนื้อเรื่องประมาณ 24-30 pt");
-    L.push("- คำพื้นฐานที่ครูกำหนดซึ่งปรากฏในเนื้อเรื่อง พิมพ์ด้วยตัวอักษรสีแดง คำอื่นพิมพ์สีดำ");
     L.push("- แบ่งเนื้อเรื่องและคำศัพท์ออกจากกันอย่างชัดเจน");
     L.push("- ภาพประกอบต้องสัมพันธ์กับเหตุการณ์และตัวละครในแต่ละหน้า");
     L.push("- เขียนหัวข้อ \"หน้า ...\" คั่นทุกหน้า เพื่อให้ครูนำไปจัดหน้าได้ทีละหน้า");
@@ -760,13 +750,7 @@
     renderChars("main", mains.length, mains);
     renderChars("sub", subs.length, subs);
     document.querySelectorAll('input[name="level"]').forEach(function (r) { r.checked = r.value === v.level; });
-    var artKnown = false;
-    document.querySelectorAll('input[name="art"]').forEach(function (r) {
-      r.checked = r.value === v.art && r.value !== "__custom";
-      if (r.checked) { artKnown = true; }
-    });
-    if (!artKnown) { $("art4").checked = true; }
-    $("artCustom").value = artKnown ? "" : (v.art || "");
+    document.querySelectorAll('input[name="art"]').forEach(function (r) { r.checked = r.value === v.art; });
     selected = (v.vocab || []).slice();
     $("bankGrade").value = v.grade;
     $("wordSearch").value = "";
@@ -884,11 +868,6 @@
   $("storyForm").addEventListener("submit", function (e) { e.preventDefault(); build(true); });
   $("grade").addEventListener("change", function () { $("bankGrade").value = this.value; renderBank(); });
   $("bankGrade").addEventListener("change", renderBank);
-  document.querySelectorAll('input[name="art"]').forEach(function (r) {
-    r.addEventListener("change", function () {
-      if ($("art4").checked) { $("artCustom").focus(); }
-    });
-  });
   $("series").addEventListener("change", function () {
     var custom = this.value === "__custom";
     $("seriesCustom").hidden = !custom;
