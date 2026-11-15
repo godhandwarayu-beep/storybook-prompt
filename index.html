@@ -133,6 +133,11 @@
   button.chip { font-weight: 500; border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink); }
   button.link { border: 0; background: none; color: var(--accent); padding: 0; font-size: 14px; font-weight: 500; text-decoration: underline; }
   button.small { padding: 8px 12px; font-size: 15px; }
+  .progress { display: flex; align-items: center; gap: 12px; }
+  .progress-track { flex: 1; height: 14px; border-radius: 999px; background: var(--bg); border: 1px solid var(--line); overflow: hidden; }
+  .progress-fill { height: 100%; width: 0; border-radius: 999px; background: var(--accent); }
+  .progress-pct { font-weight: 700; font-size: 18px; min-width: 3.2em; text-align: right; font-variant-numeric: tabular-nums; }
+  button:disabled { opacity: .6; cursor: progress; }
   .field-title { font-weight: 600; font-size: 16px; }
   .locked-list { margin: 0; padding: 10px 12px 10px 34px; border: 1px solid var(--line); border-radius: 8px; background: var(--mark-soft); font-size: 15.5px; display: flex; flex-direction: column; gap: 3px; }
   .extra-rows { display: flex; flex-direction: column; gap: 8px; }
@@ -435,7 +440,13 @@
 
     <section class="panel" aria-labelledby="outTitle" id="result">
       <h2 id="outTitle">ข้อความสำหรับ NotebookLM</h2>
-      <p class="hint" id="outStatus">กดปุ่ม "สร้าง Prompt" เพื่อสร้างข้อความ</p>
+      <p class="hint" id="outStatus" aria-live="polite">กดปุ่ม "สร้าง Prompt" เพื่อสร้างข้อความ</p>
+      <div class="progress" id="progressBox" hidden>
+        <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="ความคืบหน้าการสร้าง Prompt" id="progressBar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <span class="progress-pct" id="progressPct">0%</span>
+      </div>
 
       <div class="out">
         <div class="out-head">
@@ -890,7 +901,8 @@
     L.push("  บรรทัดที่ 1 (ตัวอักษรขนาดปกติ): หนังสือส่งเสริมการอ่าน ชุด " + (d.series || DOTS));
     L.push("  บรรทัดที่ 2 (ตัวอักษรขนาดปกติ): กลุ่มสาระการเรียนรู้ภาษาไทย ชั้นประถมศึกษาปีที่ " + thaiNum(d.grade) + " เล่มที่ " + (d.volume ? thaiNum(d.volume) : DOTS));
     L.push("  บรรทัดที่ 3 (ตัวอักษรขนาดใหญ่ที่สุดในหน้า เด่นกว่าข้อความอื่นทั้งหมด): " + (d.bookTitle || "ชื่อเรื่องที่ AI ตั้ง"));
-    L.push("  ที่มุมขวาล่างของปก มีข้อความ 2 บรรทัด ตัวอักษรขนาดเล็ก จัดชิดขวา ใช้ถ้อยคำตามนี้ทุกตัวอักษร");
+    L.push("  ที่ด้านขวาล่างของปก มีข้อความ 2 บรรทัด ตัวอักษรขนาดเล็ก จัดชิดขวา ใช้ถ้อยคำตามนี้ทุกตัวอักษร");
+    L.push("  วางข้อความ 2 บรรทัดนี้ให้สูงจากขอบล่างของสไลด์ประมาณหนึ่งในแปดของความสูงสไลด์ และห่างจากขอบขวาเล็กน้อย ต้องเห็นครบทั้ง 2 บรรทัด ไม่ถูกตัดที่ขอบ และไม่ทับลายน้ำของโปรแกรมที่มุมขวาล่างสุด");
     L.push("    บรรทัดที่ 1: " + COVER_ORG[0]);
     L.push("    บรรทัดที่ 2: " + COVER_ORG[1]);
     L.push("  บนปกมีข้อความเฉพาะ 3 บรรทัดในกล่อง และ 2 บรรทัดที่มุมขวาล่างนี้เท่านั้น ไม่ต้องแสดงชื่อผู้แต่งและไม่ต้องมีข้อความอื่น");
@@ -947,6 +959,10 @@
     L.push("- เริ่มนับหน้า ๑ ที่เนื้อเรื่องหน้าแรก แล้วนับต่อเนื่องไปจนถึงหน้าคณะผู้จัดทำ ซึ่งเป็นหน้า " + thaiNum(P.creditsPage));
     L.push("- แสดงเลขหน้าเป็นเลขไทยขนาดเล็กที่มุมล่างขวาของทุกสไลด์ที่มีเลขหน้า และต้องตรงกับที่ระบุในสารบัญ");
     L.push("");
+    L.push("6. พื้นที่ลายน้ำ");
+    L.push("- โปรแกรมจะใส่ลายน้ำไว้ที่มุมขวาล่างสุดของทุกสไลด์ ให้เว้นแถบล่างสุดของสไลด์ (สูงประมาณหนึ่งในสิบของความสูงสไลด์) บริเวณด้านขวาไว้ว่าง");
+    L.push("- ห้ามวางข้อความ เลขหน้า กล่องข้อความ หรือใบหน้าตัวละครในบริเวณนั้น ให้ขยับขึ้นมาเหนือแถบนี้ทั้งหมด");
+    L.push("");
     L.push("สไลด์คำนำ สารบัญ คำแนะนำ บัญชีคำศัพท์ และคณะผู้จัดทำ ให้ใช้พื้นหลังเป็นภาพประกอบแบบเดียวกับเนื้อเรื่องแต่เรียบง่าย และวางข้อความในกล่องสีขาวมุมโค้งมนขนาดใหญ่กลางหน้า");
     L.push("");
     L.push("ครูกรอกข้อมูลครบแล้ว ให้สร้างได้ทันทีโดยไม่ถามซ้ำ ข้อมูลที่ระบุว่าครูไม่ได้กำหนด ให้ AI ตัดสินใจเอง");
@@ -982,7 +998,8 @@
       "ไม่มีหัวข้อ ไม่มีบูลเล็ต ไม่มีข้อความอื่นนอกกล่อง ไม่ใส่ตัวหนังสือในภาพ " +
       "เขียนประโยคภาษาไทยตามปกติ เน้นคำพื้นฐานด้วยสีแดงของตัวอักษรอย่างเดียว ห้ามใส่วงเล็บ [ ] ( ) เครื่องหมาย + หรือสัญลักษณ์ใด ๆ คั่นหรือครอบคำ " +
       "ตัวละครทุกตัวต้องเหมือนกับบนปกทุกประการ ทั้งวัย สีผม ทรงผม และเสื้อผ้า ห้ามเปลี่ยนระหว่างหน้า " +
-      "ปกหน้ามีข้อความ 3 บรรทัดในกล่อง และข้อความ 2 บรรทัดที่มุมขวาล่างตามข้อ 4 เท่านั้น ห้ามแสดงชื่อผู้แต่งที่ปกหน้า ชื่อผู้แต่งอยู่ที่ปกหลัง คำนำใช้ข้อความตามข้อ 4 ทุกตัวอักษรและลงท้ายด้วยคำว่า คณะผู้จัดทำ โดยไม่มีชื่อบุคคล สารบัญและคำแนะนำใช้รายการและข้อความตามข้อ 4 ทุกบรรทัด " +
+      "เว้นแถบล่างสุดด้านขวาของทุกสไลด์ไว้ว่างตามข้อ 6 เพราะมีลายน้ำของโปรแกรม ข้อความและเลขหน้าต้องอยู่เหนือแถบนั้นและเห็นครบ " +
+      "ปกหน้ามีข้อความ 3 บรรทัดในกล่อง และข้อความ 2 บรรทัดที่ด้านขวาล่างตามข้อ 4 เท่านั้น ห้ามแสดงชื่อผู้แต่งที่ปกหน้า ชื่อผู้แต่งอยู่ที่ปกหลัง คำนำใช้ข้อความตามข้อ 4 ทุกตัวอักษรและลงท้ายด้วยคำว่า คณะผู้จัดทำ โดยไม่มีชื่อบุคคล สารบัญและคำแนะนำใช้รายการและข้อความตามข้อ 4 ทุกบรรทัด " +
       "ใส่เลขหน้าเป็นเลขไทยตามข้อ 5 คือคำนำหน้า ก สารบัญหน้า ข คำแนะนำหน้า ค เนื้อเรื่องเริ่มหน้า ๑ นับต่อเนื่องถึงหน้าคณะผู้จัดทำ ปกหน้าและปกหลังไม่มีเลขหน้า " +
       "แบบฝึกทักษะใช้พื้นหลังสีขาวและภาพลายเส้นขาวดำตามข้อกำหนดในข้อ 4 " +
       "ใช้คำพื้นฐานให้ครบทั้ง " + d.vocab.length + " คำ และสะกดภาษาไทยให้ถูกต้องทุกคำ " +
@@ -994,7 +1011,7 @@
     $(inputId).classList.toggle("invalid", !!msg);
   }
 
-  function build(scroll) {
+  function build(scroll, animate) {
     var d = readForm();
     var ok = true;
     setError("topic", "errTopic", "");
@@ -1006,13 +1023,47 @@
       (d.topic ? $("wordSearch") : $("topic")).focus();
       return;
     }
-    $("outSource").value = buildSource(d);
-    $("outDraft").value = buildDraft(d);
-    $("outCommand").value = buildCommand(d);
-    $("outStatus").textContent = "สร้างแล้ว สำหรับชั้น ป." + d.grade + " เนื้อเรื่อง " + d.pages + " หน้า รวมทั้งเล่ม " + pagePlan(d).creditsPage + " หน้า คำพื้นฐาน " + d.vocab.length + " คำ";
+    var finish = function () {
+      $("outSource").value = buildSource(d);
+      $("outDraft").value = buildDraft(d);
+      $("outCommand").value = buildCommand(d);
+      $("outStatus").textContent = "สร้างเสร็จแล้ว สำหรับชั้น ป." + d.grade + " เนื้อเรื่อง " + d.pages + " หน้า รวมทั้งเล่ม " + pagePlan(d).creditsPage + " หน้า คำพื้นฐาน " + d.vocab.length + " คำ";
+    };
     if (scroll && window.matchMedia("(max-width: 860px)").matches) {
       $("result").scrollIntoView({ behavior: "smooth", block: "start" });
     }
+    if (animate) { runProgress(finish); } else { finish(); }
+  }
+
+  var progressTimer = null;
+  function runProgress(done) {
+    var STEPS = [[0, "กำลังรวบรวมข้อมูลที่กรอก"], [30, "กำลังจัดคำพื้นฐานและตัวละคร"], [60, "กำลังเขียนคำสั่งสำหรับ NotebookLM"], [90, "กำลังตรวจความครบถ้วน"]];
+    var DURATION = 1800, started = Date.now();
+    if (progressTimer) { clearInterval(progressTimer); }
+    $("outSource").value = ""; $("outDraft").value = ""; $("outCommand").value = "";
+    $("btnBuild").disabled = true;
+    $("progressBox").hidden = false;
+    var paint = function (pct) {
+      $("progressFill").style.width = pct + "%";
+      $("progressPct").textContent = pct + "%";
+      $("progressBar").setAttribute("aria-valuenow", String(pct));
+      var label = STEPS[0][1];
+      STEPS.forEach(function (st) { if (pct >= st[0]) { label = st[1]; } });
+      $("outStatus").textContent = label + " " + pct + "%";
+    };
+    paint(0);
+    progressTimer = setInterval(function () {
+      var pct = Math.min(100, Math.round((Date.now() - started) / DURATION * 100));
+      paint(pct);
+      if (pct >= 100) {
+        clearInterval(progressTimer); progressTimer = null;
+        setTimeout(function () {
+          $("progressBox").hidden = true;
+          $("btnBuild").disabled = false;
+          done();
+        }, 250);
+      }
+    }, 40);
   }
 
   function fill(v) {
@@ -1196,7 +1247,7 @@
     }
   }
 
-  $("storyForm").addEventListener("submit", function (e) { e.preventDefault(); build(true); });
+  $("storyForm").addEventListener("submit", function (e) { e.preventDefault(); if (!$("btnBuild").disabled) { build(true, true); } });
   $("grade").addEventListener("change", function () { $("bankGrade").value = this.value; populateSets(); renderBank(); });
   $("bankGrade").addEventListener("change", function () { populateSets(); renderBank(); });
   $("bankSet").addEventListener("change", renderBank);
