@@ -131,6 +131,14 @@
   button.chip { font-weight: 500; border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink); }
   button.link { border: 0; background: none; color: var(--accent); padding: 0; font-size: 14px; font-weight: 500; text-decoration: underline; }
   button.small { padding: 8px 12px; font-size: 15px; }
+  .field-title { font-weight: 600; font-size: 16px; }
+  .locked-list { margin: 0; padding: 10px 12px 10px 34px; border: 1px solid var(--line); border-radius: 8px; background: var(--mark-soft); font-size: 15.5px; display: flex; flex-direction: column; gap: 3px; }
+  .extra-rows { display: flex; flex-direction: column; gap: 8px; }
+  .extra-rows:empty { display: none; }
+  .extra-row { display: flex; gap: 8px; align-items: center; }
+  .extra-row input { flex: 1; min-width: 0; }
+  @media (max-width: 440px) { .author-row { flex-wrap: wrap; } .author-row input { flex-basis: 100%; } }
+  button.remove { padding: 6px 12px; font-size: 15px; background: transparent; color: var(--danger); border-color: var(--line); }
   .chars { display: flex; flex-direction: column; gap: 12px; }
   .chars:empty { display: none; }
   .char-item { display: flex; flex-direction: column; gap: 10px; padding: 12px; border: 1px solid var(--line); border-radius: 10px; }
@@ -217,6 +225,7 @@
   }
   #outSource { height: 420px; }
   #outCommand { height: 210px; }
+  #outDraft { height: 190px; }
   .count { color: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; }
   ol.how { margin: 0; padding-left: 1.3em; display: flex; flex-direction: column; gap: 4px; font-size: 15.5px; }
   hr { border: 0; border-top: 1px dashed var(--line); margin: 0; width: 100%; }
@@ -384,8 +393,10 @@
         </div>
 
         <div class="field">
-          <label for="advisors">คณะที่ปรึกษา <span class="sub">บรรทัดละ 1 ชื่อ</span></label>
-          <textarea id="advisors" placeholder="ชื่อ นามสกุล ตำแหน่ง"></textarea>
+          <span class="field-title">คณะที่ปรึกษา <span class="sub">รายชื่อ 5 ท่านแรกกำหนดไว้แล้ว</span></span>
+          <ol class="locked-list" id="advisorLocked"></ol>
+          <div class="extra-rows" id="advisorExtra"></div>
+          <div><button type="button" class="ghost small" id="btnAddAdvisor">เพิ่มชื่อที่ปรึกษา</button></div>
         </div>
 
         <div class="field">
@@ -399,13 +410,9 @@
         </div>
 
         <div class="field">
-          <label for="author">ผู้แต่ง <span class="sub">ใส่ได้หลายคน บรรทัดละ 1 ชื่อ</span></label>
-          <textarea id="author" placeholder="ชื่อ นามสกุล"></textarea>
-        </div>
-
-        <div class="field">
-          <label for="school">โรงเรียน</label>
-          <input type="text" id="school" autocomplete="off" placeholder="เว้นว่างได้">
+          <span class="field-title">ผู้แต่ง <span class="sub">ใส่ชื่อและโรงเรียนของแต่ละคน</span></span>
+          <div class="extra-rows" id="authorRows"></div>
+          <div><button type="button" class="ghost small" id="btnAddAuthor">เพิ่มผู้แต่ง</button></div>
         </div>
 
         <div class="actions">
@@ -429,7 +436,15 @@
 
       <div class="out">
         <div class="out-head">
-          <span class="out-title"><span class="step">2</span>คำสั่งสำหรับสร้างสไลด์</span>
+          <span class="out-title"><span class="step">2</span>คำสั่งดูเนื้อหาก่อน (วางในช่องแชต)</span>
+          <button type="button" class="copy" id="copyDraft" data-target="outDraft">คัดลอก</button>
+        </div>
+        <textarea id="outDraft" readonly aria-label="คำสั่งดูเนื้อหาก่อน"></textarea>
+      </div>
+
+      <div class="out">
+        <div class="out-head">
+          <span class="out-title"><span class="step">3</span>คำสั่งสำหรับสร้างสไลด์</span>
           <button type="button" class="copy" id="copyCommand" data-target="outCommand">คัดลอก</button>
         </div>
         <textarea id="outCommand" readonly aria-label="คำสั่งสำหรับสร้างสไลด์"></textarea>
@@ -441,8 +456,9 @@
         <ol class="how">
           <li>สร้างโน้ตบุ๊กใหม่ กดเพิ่มแหล่งข้อมูล เลือก "ข้อความที่คัดลอก" แล้ววางข้อความชิ้นที่ 1</li>
           <li>ถ้านิทานมีสถานที่จริง ให้เพิ่มเว็บไซต์หรือเอกสารเกี่ยวกับสถานที่นั้นเป็นแหล่งข้อมูลด้วย เพื่อให้ข้อเท็จจริงถูกต้อง</li>
-          <li>ในแผง Studio กดไอคอนดินสอที่ "สไลด์" (Slide Deck) เลือกรูปแบบ "สไลด์สำหรับผู้นำเสนอ" (Presenter Slides) และภาษาไทย</li>
-          <li>วางข้อความชิ้นที่ 2 ในช่องคำสั่ง แล้วกดสร้าง รอสักครู่จนสไลด์เสร็จ</li>
+          <li>วางข้อความชิ้นที่ 2 ในช่องแชต แล้วอ่านตรวจเนื้อหา ถ้าต้องการแก้ ให้พิมพ์บอกในแชตจนพอใจ</li>
+          <li>กด "บันทึกลงในโน้ต" (Save to note) ใต้คำตอบที่พอใจ แล้วเปิดโน้ตนั้นและเลือก "แปลงเป็นแหล่งข้อมูล" (Convert to source)</li>
+          <li>ในแผง Studio กดไอคอนดินสอที่ "สไลด์" (Slide Deck) เลือกรูปแบบ "สไลด์สำหรับผู้นำเสนอ" (Presenter Slides) และภาษาไทย วางข้อความชิ้นที่ 3 แล้วกดสร้าง</li>
           <li>ถ้าหน้าใดไม่ตรง ใช้คำสั่งแก้ไขเฉพาะสไลด์นั้นได้ โดยไม่ต้องสร้างใหม่ทั้งเล่ม</li>
         </ol>
       </div>
@@ -491,6 +507,74 @@
     input.placeholder = placeholder; input.value = value || "";
     wrap.appendChild(label); wrap.appendChild(input);
     return wrap;
+  }
+
+  var LOCKED_ADVISORS = [
+    "นายลิขิต ศรีวรมย์ ผอ.สพป.พระนครศรีอยุธยา เขต 2",
+    "นายประชา แสนเย็น รองผอ.สพป.พระนครศรีอยุธยา เขต 2",
+    "นายอภิชาติ คุยสูงเนิน รองผอ.สพป.พระนครศรีอยุธยา เขต 2",
+    "นายอนุสิทธิ์ นามโยธา รองผอ.สพป.พระนครศรีอยุธยา เขต 2",
+    "นางสาวเพ็ญพรรณ กรึงไกร ผอ.กลุ่มนิเทศ ติดตาม และประเมินผล"
+  ];
+  var advisorSeq = 0;
+  var authorSeq = 0;
+
+  function readAuthors() {
+    var out = [];
+    $("authorRows").querySelectorAll(".author-row").forEach(function (row) {
+      var inputs = row.querySelectorAll("input");
+      var name = inputs[0].value.trim(), school = inputs[1].value.trim();
+      if (!name) { return; }
+      if (school && school.indexOf("โรงเรียน") !== 0) { school = "โรงเรียน" + school; }
+      out.push({ name: name, school: school });
+    });
+    return out;
+  }
+
+  function addAuthorRow(value, focus) {
+    authorSeq += 1;
+    var v = value || {};
+    var row = document.createElement("div");
+    row.className = "extra-row author-row";
+    var name = document.createElement("input");
+    name.type = "text"; name.id = "authorName" + authorSeq; name.autocomplete = "off";
+    name.placeholder = "ชื่อ นามสกุล"; name.setAttribute("aria-label", "ชื่อผู้แต่ง"); name.value = v.name || "";
+    var school = document.createElement("input");
+    school.type = "text"; school.id = "authorSchool" + authorSeq; school.autocomplete = "off";
+    school.placeholder = "โรงเรียน"; school.setAttribute("aria-label", "โรงเรียนของผู้แต่ง"); school.value = v.school || "";
+    var del = document.createElement("button");
+    del.type = "button"; del.className = "remove"; del.textContent = "ลบ";
+    del.setAttribute("aria-label", "ลบผู้แต่งแถวนี้");
+    del.addEventListener("click", function () {
+      row.remove();
+      if (!$("authorRows").children.length) { addAuthorRow({}, false); }
+    });
+    row.appendChild(name); row.appendChild(school); row.appendChild(del);
+    $("authorRows").appendChild(row);
+    if (focus) { name.focus(); }
+  }
+
+  function readExtraAdvisors() {
+    return Array.prototype.map.call($("advisorExtra").querySelectorAll("input"), function (i) { return i.value.trim(); })
+      .filter(Boolean);
+  }
+
+  function addAdvisorRow(value, focus) {
+    advisorSeq += 1;
+    var row = document.createElement("div");
+    row.className = "extra-row";
+    var input = document.createElement("input");
+    input.type = "text"; input.id = "advisorExtra" + advisorSeq; input.autocomplete = "off";
+    input.placeholder = "ชื่อ นามสกุล ตำแหน่ง";
+    input.setAttribute("aria-label", "ชื่อที่ปรึกษาที่เพิ่ม");
+    input.value = value || "";
+    var del = document.createElement("button");
+    del.type = "button"; del.className = "remove"; del.textContent = "ลบ";
+    del.setAttribute("aria-label", "ลบชื่อที่ปรึกษาแถวนี้");
+    del.addEventListener("click", function () { row.remove(); });
+    row.appendChild(input); row.appendChild(del);
+    $("advisorExtra").appendChild(row);
+    if (focus) { input.focus(); }
   }
 
   var GENDERS = [["", "ให้ AI กำหนด"], ["ชาย", "ชาย"], ["หญิง", "หญิง"], ["ไม่ระบุเพศ", "ไม่ระบุเพศ (เช่น สัตว์ สิ่งของ)"]];
@@ -545,7 +629,7 @@
   }
 
   var TEXT_IDS = ["topic", "mustAppear", "moral",
-    "volume", "bookTitle", "advisors", "committee", "editors", "author", "school"];
+    "volume", "bookTitle", "committee", "editors"];
   var DOTS = "..............................";
 
   function thaiNum(v) {
@@ -604,11 +688,11 @@
       series: $("series").value === "__custom" ? $("seriesCustom").value.trim() : $("series").value,
       volume: $("volume").value.trim(),
       bookTitle: $("bookTitle").value.trim(),
-      advisors: lines($("advisors").value),
+      advisors: LOCKED_ADVISORS.concat(readExtraAdvisors()),
       committee: lines($("committee").value),
       editors: lines($("editors").value),
-      author: lines($("author").value),
-      school: $("school").value.trim()
+      author: readAuthors().map(function (a) { return a.school ? a.name + " " + a.school : a.name; }),
+      authorNames: readAuthors().map(function (a) { return a.name; })
     };
   }
 
@@ -635,7 +719,6 @@
     L.push("- ระดับความยากในการอ่าน: " + d.level + " สำหรับ " + g + " (" + LEVELS[d.level] + ")");
     L.push("- รูปแบบภาพประกอบ: " + d.art);
     L.push("- ผู้แต่ง (" + d.author.length + " คน): " + (d.author.length ? d.author.join(", ") : "เว้นว่างไว้ให้ครูกรอกเอง"));
-    L.push("- โรงเรียน: " + (d.school || "เว้นว่างไว้ให้ครูกรอกเอง"));
     L.push("");
     L.push("2. ภารกิจของ AI");
     L.push("นำข้อมูลและคำพื้นฐานที่ครูกำหนดมาแต่งเป็นนิทานภาษาไทยที่มีเนื้อเรื่องต่อเนื่องกันตั้งแต่ต้นจนจบ แล้วสร้างเป็นหนังสือนิทานภาพแบบสไลด์ หน้าละ 1 สไลด์ โดยต้องปฏิบัติตามเงื่อนไขดังนี้");
@@ -684,8 +767,7 @@
     nameBlock(L, "คณะกรรมการพิจารณาจัดทำหนังสือส่งเสริมการอ่าน", d.committee);
     nameBlock(L, "คณะบรรณาธิการ", d.editors);
     nameBlock(L, "ผู้แต่ง", d.author);
-    L.push("  โรงเรียน: " + (d.school || DOTS));
-    L.push("สไลด์ที่ " + (story + 7) + " ปกหลัง: ภาพประกอบเต็มหน้า มีกล่องข้อความสีขาวมุมโค้งมน ข้อความแนะนำหนังสือ 1-2 ประโยค ข้อคิดของเรื่อง และบรรทัดสุดท้ายเป็นชื่อผู้แต่งด้วยตัวอักษรขนาดเล็ก: " + (d.author.length ? "ผู้แต่ง " + d.author.join(", ") : "ผู้แต่ง " + DOTS));
+    L.push("สไลด์ที่ " + (story + 7) + " ปกหลัง: ภาพประกอบเต็มหน้า มีกล่องข้อความสีขาวมุมโค้งมน ข้อความแนะนำหนังสือ 1-2 ประโยค ข้อคิดของเรื่อง และบรรทัดสุดท้ายเป็นชื่อผู้แต่งด้วยตัวอักษรขนาดเล็ก: " + (d.authorNames.length ? "ผู้แต่ง " + d.authorNames.join(", ") : "ผู้แต่ง " + DOTS));
     L.push("ชื่อผู้แต่งแสดงเฉพาะที่ปกหลังและสไลด์คณะผู้จัดทำ ห้ามแสดงที่ปกหน้า");
     L.push("");
     L.push("สไลด์คำนำ สารบัญ คำศัพท์ แบบฝึกหัด และคณะผู้จัดทำ ให้ใช้พื้นหลังเป็นภาพประกอบแบบเดียวกับเนื้อเรื่องแต่เรียบง่าย และวางข้อความในกล่องสีขาวมุมโค้งมนขนาดใหญ่กลางหน้า");
@@ -694,6 +776,22 @@
     L.push("");
     L.push("เป้าหมายสำคัญที่สุด: นักเรียนต้องได้ฝึกอ่านคำพื้นฐานที่ครูต้องการจริง อ่านได้ตามระดับความสามารถของตนเอง และสนุกกับนิทานภาพที่มีเรื่องราวต่อเนื่องครบทุกหน้า");
     return L.join("\n");
+  }
+
+  function buildDraft(d) {
+    var story = d.pages - 2;
+    return "แต่งเนื้อหาหนังสือนิทานตามแหล่งข้อมูล \"คำสั่งสร้างหนังสือนิทานฝึกอ่านภาษาไทย\" ให้ครูตรวจก่อน ยังไม่ต้องสร้างสไลด์ " +
+      "ตั้งหัวข้อบนสุดว่า \"ต้นฉบับนิทานที่ครูตรวจแล้ว\" แล้วแสดงเป็นข้อความตามลำดับนี้ " +
+      "1) ชื่อเรื่อง " +
+      "2) ลักษณะของตัวละครแต่ละตัว ได้แก่ วัย สีผม ทรงผม เสื้อผ้า และสีเสื้อผ้า " +
+      "3) คำนำ " +
+      "4) สารบัญ หน้าละ 1 บรรทัด " +
+      "5) เนื้อเรื่องหน้า 1 ถึงหน้า " + story + " แต่ละหน้าขึ้นต้นว่า \"หน้า\" ตามด้วยเลขหน้า แล้วเขียนข้อความที่จะอยู่ในกล่อง คำบรรยายภาพสั้น ๆ และบรรทัด \"คำพื้นฐานในหน้านี้\" " +
+      "6) หน้าคำศัพท์ " +
+      "7) แบบฝึกหัด " +
+      "8) ข้อความปกหลัง " +
+      "ท้ายสุดให้สรุปว่าใช้คำพื้นฐานที่ครูกำหนดครบทั้ง " + d.vocab.length + " คำหรือไม่ และคำใดอยู่หน้าใด " +
+      "เขียนเนื้อเรื่องเป็นประโยคภาษาไทยตามปกติ ไม่ใส่วงเล็บหรือสัญลักษณ์ใด ๆ ที่คำพื้นฐาน";
   }
 
   function buildCommand(d) {
@@ -705,7 +803,8 @@
       "เขียนประโยคภาษาไทยตามปกติ เน้นคำพื้นฐานด้วยสีแดงของตัวอักษรอย่างเดียว ห้ามใส่วงเล็บ [ ] ( ) เครื่องหมาย + หรือสัญลักษณ์ใด ๆ คั่นหรือครอบคำ " +
       "ตัวละครทุกตัวต้องเหมือนกับบนปกทุกประการ ทั้งวัย สีผม ทรงผม และเสื้อผ้า ห้ามเปลี่ยนระหว่างหน้า " +
       "ปกหน้ามีข้อความ 3 บรรทัดตามข้อ 4 เท่านั้น ห้ามแสดงชื่อผู้แต่งที่ปกหน้า ชื่อผู้แต่งอยู่ที่ปกหลัง สารบัญเขียนหน้าละ 1 บรรทัด " +
-      "ใช้คำพื้นฐานให้ครบทั้ง " + d.vocab.length + " คำ และสะกดภาษาไทยให้ถูกต้องทุกคำ";
+      "ใช้คำพื้นฐานให้ครบทั้ง " + d.vocab.length + " คำ และสะกดภาษาไทยให้ถูกต้องทุกคำ " +
+      "หากโน้ตบุ๊กนี้มีแหล่งข้อมูล \"ต้นฉบับนิทานที่ครูตรวจแล้ว\" ให้ใช้ชื่อเรื่อง ลักษณะตัวละคร และข้อความเนื้อเรื่องของแต่ละหน้าตามแหล่งข้อมูลนั้นทุกตัวอักษร ห้ามแต่งใหม่หรือเปลี่ยนถ้อยคำ และไม่นำคำบรรยายภาพหรือบรรทัด \"คำพื้นฐานในหน้านี้\" มาแสดงเป็นข้อความในสไลด์";
   }
 
   function setError(inputId, errId, msg) {
@@ -726,6 +825,7 @@
       return;
     }
     $("outSource").value = buildSource(d);
+    $("outDraft").value = buildDraft(d);
     $("outCommand").value = buildCommand(d);
     $("outStatus").textContent = "สร้างแล้ว สำหรับชั้น ป." + d.grade + " จำนวน " + d.pages + " หน้า คำพื้นฐาน " + d.vocab.length + " คำ";
     if (scroll && window.matchMedia("(max-width: 860px)").matches) {
@@ -736,6 +836,10 @@
   function fill(v) {
     $("grade").value = v.grade; $("pages").value = v.pages;
     TEXT_IDS.forEach(function (id) { $(id).value = v[id] || ""; });
+    $("authorRows").textContent = "";
+    (v.authors && v.authors.length ? v.authors : [{}]).forEach(function (a) { addAuthorRow(a, false); });
+    $("advisorExtra").textContent = "";
+    (v.advisorsExtra || []).forEach(function (name) { addAdvisorRow(name, false); });
     var ser = v.series || "";
     var known = Array.prototype.some.call($("series").options, function (o) { return o.value === ser && ser !== "__custom"; });
     $("series").value = known ? ser : "__custom";
@@ -872,6 +976,13 @@
   $("storyForm").addEventListener("submit", function (e) { e.preventDefault(); build(true); });
   $("grade").addEventListener("change", function () { $("bankGrade").value = this.value; renderBank(); });
   $("bankGrade").addEventListener("change", renderBank);
+  $("btnAddAdvisor").addEventListener("click", function () { addAdvisorRow("", true); });
+  $("btnAddAuthor").addEventListener("click", function () { addAuthorRow({}, true); });
+  LOCKED_ADVISORS.forEach(function (name) {
+    var li = document.createElement("li");
+    li.textContent = name;
+    $("advisorLocked").appendChild(li);
+  });
   document.querySelectorAll('input[name="art"]').forEach(function (r) {
     r.addEventListener("change", function () {
       if ($("art4").checked) { $("artCustom").focus(); }
@@ -913,13 +1024,14 @@
   $("subCount").addEventListener("change", function () { renderChars("sub", parseInt(this.value, 10)); });
   $("btnClear").addEventListener("click", function () {
     fill({ grade: "1", pages: "10", level: "ง่าย", art: "ภาพการ์ตูนน่ารัก" });
-    $("outSource").value = ""; $("outCommand").value = "";
+    $("outSource").value = ""; $("outDraft").value = ""; $("outCommand").value = "";
     $("outStatus").textContent = "กดปุ่ม \"สร้าง Prompt\" เพื่อสร้างข้อความ";
     $("exampleNote").hidden = true;
     setError("topic", "errTopic", ""); setError("wordSearch", "errVocab", "");
     $("topic").focus();
   });
   $("copySource").addEventListener("click", function () { copyFrom(this); });
+  $("copyDraft").addEventListener("click", function () { copyFrom(this); });
   $("copyCommand").addEventListener("click", function () { copyFrom(this); });
 
   fill(EXAMPLE);
