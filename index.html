@@ -379,17 +379,12 @@
           </div>
         </fieldset>
 
-        <fieldset>
-          <legend>รูปแบบภาพประกอบ</legend>
-          <div class="choices">
-            <label><input type="radio" name="art" id="art1" value="ภาพการ์ตูนน่ารัก" checked> การ์ตูนน่ารัก</label>
-            <label><input type="radio" name="art" id="art2" value="ภาพกึ่งสมจริง"> กึ่งสมจริง</label>
-            <label><input type="radio" name="art" id="art3" value="ภาพสีสันสดใส"> สีสันสดใส</label>
-            <label><input type="radio" name="art" id="art4" value="__custom"> กำหนดเอง</label>
-          </div>
+        <div class="field">
+          <label for="artStyle">รูปแบบภาพประกอบ</label>
+          <select id="artStyle"></select>
           <label for="artCustom" class="sub-label">พิมพ์รูปแบบภาพเพิ่มเติมเอง <span class="sub">ไม่บังคับ</span></label>
-          <input type="text" id="artCustom" autocomplete="off" placeholder="เช่น โทนสีพาสเทล ลายเส้นดินสอ ภาพสีน้ำ ตัวละครหัวโต">
-        </fieldset>
+          <input type="text" id="artCustom" autocomplete="off" placeholder="เช่น โทนสีพาสเทล ลายเส้นดินสอ ตัวละครหัวโต">
+        </div>
 
         <fieldset>
           <legend>รูปแบบแบบฝึกหัด <span class="sub">เลือกได้มากกว่า 1 แบบ แบบละ 1 หน้า</span></legend>
@@ -538,7 +533,7 @@
     var out = [];
     $("authorRows").querySelectorAll(".author-row").forEach(function (row) {
       var inputs = row.querySelectorAll("input");
-      var name = inputs[0].value.trim(), school = inputs[1].value.trim();
+      var name = cleanName(inputs[0].value), school = inputs[1].value.replace(/\s+/g, " ").trim();
       if (!name) { return; }
       if (school && school.indexOf("โรงเรียน") !== 0) { school = "โรงเรียน" + school; }
       out.push({ name: name, school: school });
@@ -570,7 +565,7 @@
   }
 
   function readExtraAdvisors() {
-    return Array.prototype.map.call($("advisorExtra").querySelectorAll("input"), function (i) { return i.value.trim(); })
+    return Array.prototype.map.call($("advisorExtra").querySelectorAll("input"), function (i) { return cleanName(i.value); })
       .filter(Boolean);
   }
 
@@ -591,6 +586,64 @@
     $("advisorExtra").appendChild(row);
     if (focus) { input.focus(); }
   }
+
+  var ART_STYLES = [
+    ["แบบพื้นฐาน", [
+      ["การ์ตูนน่ารัก", "ภาพการ์ตูนน่ารัก"],
+      ["สีสันสดใส", "ภาพสีสันสดใส"]
+    ]],
+    ["สไตล์ญี่ปุ่น (Japanese Style)", [
+      ["อนิเมะ (Anime)", "ภาพสไตล์อนิเมะญี่ปุ่น ตาโต เส้นคมชัด สีสดใส"],
+      ["มังงะ (Manga)", "ภาพสไตล์มังงะญี่ปุ่น ลายเส้นหมึกชัดเจน ลงสีเรียบ"],
+      ["จิบิ (Chibi)", "ภาพสไตล์จิบิ ตัวละครหัวโตตัวเล็ก น่ารัก"],
+      ["สตูดิโอจิบลิ (Studio Ghibli)", "ภาพแอนิเมชันญี่ปุ่นวาดมือ โทนอบอุ่น พื้นหลังธรรมชาติสีน้ำนุ่มนวล"],
+      ["โมเอะ (Moe)", "ภาพสไตล์โมเอะ ตัวละครน่ารัก ตากลมโตเป็นประกาย สีพาสเทล"],
+      ["โชเน็น / โชโจ (Shonen / Shojo)", "ภาพการ์ตูนญี่ปุ่นแนวโชเน็นและโชโจ เส้นมีพลัง แววตาเป็นประกาย"]
+    ]],
+    ["สไตล์ตะวันตก (Western Style)", [
+      ["ดิสนีย์ 2D (Classic 2D Disney)", "ภาพแอนิเมชัน 2 มิติวาดมือแบบคลาสสิกตะวันตก เส้นโค้งนุ่ม ตัวละครแสดงอารมณ์ชัดเจน"],
+      ["ดิสนีย์ / พิกซาร์ 3D (Disney / Pixar 3D)", "ภาพแอนิเมชัน 3 มิติ ตัวละครกลมมน แสงเงานุ่มนวล สีสดใส"],
+      ["ท่อยาง (Rubber Hose)", "ภาพการ์ตูนย้อนยุคสไตล์ท่อยาง แขนขาโค้งเหมือนท่อ ตากลมดำ"],
+      ["คอมิกส์อเมริกัน (American Comics)", "ภาพสไตล์คอมิกส์อเมริกัน เส้นหมึกหนา สีจัด เงาเข้ม"],
+      ["ซิทคอมการ์ตูน (Adult Sitcom Cartoon)", "ภาพการ์ตูนซิทคอมตะวันตก เส้นเรียบง่าย สีพื้นเรียบ ตัวละครรูปทรงเรียบง่าย"],
+      ["มินิมอลการ์ตูน (Minimalist Cartoon)", "ภาพการ์ตูนมินิมอล ลายเส้นน้อย เรียบง่าย พื้นหลังโล่ง"]
+    ]],
+    ["สไตล์กึ่งสมจริงและล้อเลียน (Semi-Realistic & Caricature)", [
+      ["กึ่งสมจริง (Semi-Realistic)", "ภาพกึ่งสมจริง"],
+      ["การ์ตูนล้อเลียน (Caricature)", "ภาพการ์ตูนล้อเลียน สัดส่วนเกินจริง หัวโต สีหน้าชัดเจน"],
+      ["ป๊อปอาร์ต (Pop Art)", "ภาพสไตล์ป๊อปอาร์ต สีจัดจ้าน ลายจุด เส้นขอบหนา"]
+    ]],
+    ["สไตล์กราฟิกและดิจิทัล (Graphic & Digital)", [
+      ["แฟลตดีไซน์ (Flat Design)", "ภาพสไตล์แฟลตดีไซน์ รูปทรงเรียบ สีพื้น ไม่มีแสงเงา"],
+      ["สติกเกอร์ไลน์ (Line Sticker Style)", "ภาพสไตล์สติกเกอร์แชต ตัวละครน่ารัก เส้นขอบขาวหนา ท่าทางชัดเจน"],
+      ["พิกเซลอาร์ต (Pixel Art)", "ภาพสไตล์พิกเซลอาร์ตแบบเกมย้อนยุค"],
+      ["เวกเตอร์ (Vector Art)", "ภาพสไตล์เวกเตอร์ เส้นคม สีเรียบ รูปทรงชัดเจน"],
+      ["โลว์โพลี (Low Poly)", "ภาพสไตล์โลว์โพลี 3 มิติ ประกอบจากรูปเหลี่ยม"],
+      ["อาร์ตทอย (Art Toy)", "ภาพสไตล์อาร์ตทอย ตัวละครเหมือนของเล่นไวนิล ผิวมันเงา"]
+    ]],
+    ["สไตล์งานทำมือและพื้นผิววัสดุ (Handmade & Texture)", [
+      ["ดินน้ำมัน 3D (3D Clay)", "ภาพสไตล์ดินน้ำมัน 3 มิติ ผิวนุ่ม เห็นรอยปั้น"],
+      ["สต็อปโมชัน (Stop-Motion)", "ภาพสไตล์สต็อปโมชัน ตัวละครเหมือนหุ่นปั้น ฉากทำมือ"],
+      ["สีน้ำ (Watercolor)", "ภาพสีน้ำ โทนนุ่ม ขอบสีซึม"],
+      ["สีชอล์ก / ดินสอสี (Crayon / Colored Pencil)", "ภาพสีชอล์กและดินสอสี เส้นแบบเด็กวาด พื้นผิวกระดาษ"],
+      ["ภาพตัดแปะ (Paper Cutout)", "ภาพสไตล์กระดาษตัดแปะ ซ้อนชั้น เห็นขอบกระดาษ"]
+    ]]
+  ];
+  ART_STYLES.forEach(function (group) {
+    var og = document.createElement("optgroup");
+    og.label = group[0];
+    group[1].forEach(function (st) {
+      var o = document.createElement("option");
+      o.textContent = st[0]; o.value = st[1];
+      og.appendChild(o);
+    });
+    $("artStyle").appendChild(og);
+  });
+  (function () {
+    var o = document.createElement("option");
+    o.textContent = "กำหนดเอง (พิมพ์ในช่องด้านล่าง)"; o.value = "__custom";
+    $("artStyle").appendChild(o);
+  })();
 
   var GENDERS = [["", "ให้ AI กำหนด"], ["ชาย", "ชาย"], ["หญิง", "หญิง"], ["ไม่ระบุเพศ", "ไม่ระบุเพศ (เช่น สัตว์ สิ่งของ)"]];
 
@@ -651,8 +704,13 @@
     return String(v).replace(/[0-9]/g, function (c) { return "๐๑๒๓๔๕๖๗๘๙".charAt(+c); });
   }
 
+  function cleanName(t) {
+    // drop any numbering the teacher typed ("1.", "2)", "๓.", "9") and collapse tabs or repeated spaces
+    return String(t).replace(/^\s*[0-9๐-๙]+\s*[.)]?\s*(?=[^0-9๐-๙\s])/, "").replace(/\s+/g, " ").trim();
+  }
+
   function lines(text) {
-    return text.split(/\r?\n/).map(function (s) { return s.trim(); }).filter(Boolean);
+    return text.split(/\r?\n/).map(cleanName).filter(Boolean);
   }
 
   function nameBlock(L, heading, list) {
@@ -697,7 +755,7 @@
       moral: $("moral").value.trim(),
       level: radio("level"),
       art: (function () {
-        var base = radio("art"), extra = $("artCustom").value.trim();
+        var base = $("artStyle").value, extra = $("artCustom").value.trim();
         if (base === "__custom") { return extra || "ภาพที่ AI เลือกให้เหมาะกับเด็ก"; }
         return extra ? base + " (เพิ่มเติม: " + extra + ")" : base;
       })(),
@@ -825,6 +883,8 @@
       L.push("    - ไม่ต้องใส่เฉลย");
     });
     L.push("สไลด์ที่ " + (story + 5 + P.k) + " คณะผู้จัดทำ (หน้า " + P.creditsPage + "): จัดข้อมูลต่อไปนี้ทั้งหมดไว้ในสไลด์เดียว เรียงตามลำดับนี้ ใช้ชื่อและตำแหน่งตามที่ครูกรอกทุกตัวอักษร ห้ามแต่งชื่อบุคคลเพิ่มเอง");
+    L.push("  แต่ละหัวข้อนับลำดับเริ่มที่ 1 ใหม่ ใช้เลขลำดับตามที่ให้ไว้ด้านล่างนี้เท่านั้น แต่ละชื่อมีเลขลำดับเพียงตัวเดียว ห้ามใส่เลขซ้อนกัน ห้ามนับเลขต่อเนื่องข้ามหัวข้อ และห้ามเพิ่มเลขลำดับเอง");
+    L.push("  จัดชื่อและตำแหน่งให้อยู่บรรทัดเดียวกัน ถ้ารายชื่อยาวให้แบ่งเป็น 2 คอลัมน์และลดขนาดตัวอักษร");
     L.push("  คณะผู้จัดทำหนังสือส่งเสริมการอ่าน ชุด " + (d.series || DOTS) + " เรื่อง " + (d.bookTitle || "(ใช้ชื่อเรื่องเดียวกับหน้าปก)"));
     L.push("  เล่มที่ " + (d.volume ? thaiNum(d.volume) : DOTS));
     nameBlock(L, "คณะที่ปรึกษา", d.advisors);
@@ -930,12 +990,8 @@
     renderChars("main", mains.length, mains);
     renderChars("sub", subs.length, subs);
     document.querySelectorAll('input[name="level"]').forEach(function (r) { r.checked = r.value === v.level; });
-    var artKnown = false;
-    document.querySelectorAll('input[name="art"]').forEach(function (r) {
-      r.checked = r.value === v.art && r.value !== "__custom";
-      if (r.checked) { artKnown = true; }
-    });
-    if (!artKnown) { $("art4").checked = true; }
+    var artKnown = Array.prototype.some.call($("artStyle").options, function (o) { return o.value === v.art && o.value !== "__custom"; });
+    $("artStyle").value = artKnown ? v.art : "__custom";
     $("artCustom").value = artKnown ? "" : (v.art || "");
     selected = (v.vocab || []).slice();
     $("bankGrade").value = v.grade;
@@ -1106,10 +1162,8 @@
     li.textContent = name;
     $("advisorLocked").appendChild(li);
   });
-  document.querySelectorAll('input[name="art"]').forEach(function (r) {
-    r.addEventListener("change", function () {
-      if ($("art4").checked) { $("artCustom").focus(); }
-    });
+  $("artStyle").addEventListener("change", function () {
+    if (this.value === "__custom") { $("artCustom").focus(); }
   });
   $("series").addEventListener("change", function () {
     var custom = this.value === "__custom";
