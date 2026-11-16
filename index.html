@@ -521,7 +521,7 @@
             <input type="text" id="seriesCustom" autocomplete="off" placeholder="พิมพ์ชื่อชุด เช่น เรื่องเล่าชาวอยุธยา" aria-label="ชื่อชุดที่พิมพ์เอง" hidden>
           </div>
           <div class="field">
-            <label for="volume">เล่มที่</label>
+            <label for="volume">เล่มที่ <span class="sub">ใส่ให้ตามชุดที่เลือก แก้ไขได้</span></label>
             <input type="text" id="volume" autocomplete="off" placeholder="เช่น 1">
           </div>
         </div>
@@ -765,7 +765,7 @@
     subChars: [{ name: "ตาใจดี", gender: "ชาย", look: "คุณตาผมขาว ใส่เสื้อม่อฮ่อม เป็นคนพายเรือ" }],
     moral: "ความมีน้ำใจและความรักบ้านเกิด",
     level: "ง่าย", art: "ภาพการ์ตูนน่ารัก",
-    series: "สถานที่ท่องเที่ยว", volume: "1", bookTitle: "",
+    series: "สถานที่ท่องเที่ยว", volume: "3", bookTitle: "",
     advisors: "", committee: "", editors: "",
     author: "", school: ""
   };
@@ -1041,6 +1041,8 @@
       authorNames: readAuthors().map(function (a) { return a.name; })
     };
   }
+
+  var SERIES_VOLUME = { "โรงเรียน": 1, "ชุมชน": 2, "สถานที่ท่องเที่ยว": 3, "อาหาร": 4, "อาชีพ": 5, "ธรรมชาติ": 6, "วิถีชีวิต": 7, "การละเล่น": 8, "บุคคลสำคัญ": 9, "ประเพณีสำคัญ": 10 };
 
   var COVER_ORG = ["ชมรมครู : กลุ่มสาระการเรียนรู้ภาษาไทย", "สำนักงานเขตพื้นที่การศึกษาประถมศึกษาพระนครศรีอยุธยา เขต ๒"];
 
@@ -1541,6 +1543,8 @@
   $("series").addEventListener("change", function () {
     var custom = this.value === "__custom";
     $("seriesCustom").hidden = !custom;
+    if (SERIES_VOLUME[this.value]) { $("volume").value = String(SERIES_VOLUME[this.value]); }
+    else if (this.value === "") { $("volume").value = ""; }
     if (custom) { $("seriesCustom").focus(); }
   });
   $("wordSearch").addEventListener("input", renderBank);
