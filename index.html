@@ -481,6 +481,103 @@
       gap: 22px;
     }
   }
+
+  /* =========================================================
+     ส่วนแสดงภาพตัวอย่างรูปแบบภาพประกอบ (Art Style Preview)
+     ========================================================= */
+  .art-preview-box {
+    margin-top: 8px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .art-preview-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .art-preview-badge {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 15.5px;
+    color: var(--accent);
+    background: var(--mark-soft);
+    padding: 3px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--mark);
+  }
+  .art-preview-frame {
+    position: relative;
+    width: 100%;
+    max-width: 520px;
+    margin: 0 auto;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    aspect-ratio: 16 / 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .art-preview-frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: opacity 0.25s ease;
+  }
+  .art-preview-desc {
+    margin: 0;
+    font-size: 14px;
+    color: var(--muted);
+    text-align: center;
+  }
+  .art-thumbs {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(115px, 1fr));
+    gap: 8px;
+    max-height: 260px;
+    overflow-y: auto;
+    padding: 6px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+  }
+  .art-thumb-btn {
+    padding: 6px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    color: var(--ink);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    font-size: 12.5px;
+    font-weight: 500;
+    text-align: center;
+    line-height: 1.25;
+  }
+  .art-thumb-btn img {
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    object-fit: cover;
+    border-radius: 5px;
+    background: var(--surface);
+  }
+  .art-thumb-btn[aria-pressed="true"] {
+    border: 2px solid var(--accent);
+    background: var(--mark-soft);
+    font-weight: 700;
+  }
 </style>
 </head>
 <body>
@@ -629,6 +726,17 @@
         <div class="field">
           <label for="artStyle">รูปแบบภาพประกอบ</label>
           <select id="artStyle"></select>
+          <div class="art-preview-box" id="artPreviewBox">
+            <div class="art-preview-head">
+              <span class="art-preview-badge" id="artPreviewTitle">การ์ตูนน่ารัก</span>
+              <button type="button" class="link" id="btnToggleArtGrid">ดูภาพตัวอย่างทั้งหมด (26 แบบ)</button>
+            </div>
+            <div class="art-preview-frame">
+              <img id="artPreviewImg" alt="ตัวอย่างรูปแบบภาพประกอบ" loading="lazy">
+            </div>
+            <p class="art-preview-desc" id="artPreviewDesc"></p>
+            <div class="art-thumbs" id="artThumbs" hidden></div>
+          </div>
           <label for="artCustom" class="sub-label">พิมพ์รูปแบบภาพเพิ่มเติมเอง <span class="sub">ไม่บังคับ</span></label>
           <input type="text" id="artCustom" autocomplete="off" placeholder="เช่น โทนสีพาสเทล ลายเส้นดินสอ ตัวละครหัวโต">
         </div>
@@ -901,12 +1009,49 @@
       ["ภาพตัดแปะ (Paper Cutout)", "ภาพสไตล์กระดาษตัดแปะ ซ้อนชั้น เห็นขอบกระดาษ"]
     ]]
   ];
+  var ART_IMAGES = {
+    "ภาพการ์ตูนน่ารัก": "1dm3ckpf8Sbjj0Plk3PYZYkgbbh4hehbx",
+    "ภาพสีสันสดใส": "1j4ohKVh7TqmJQUESX6_tBOkEzW3irO0X",
+    "ภาพสไตล์อนิเมะญี่ปุ่น ตาโต เส้นคมชัด สีสดใส": "1sXU72MD1XkNdCqGO_H6-OVnRDzdLgQ_I",
+    "ภาพสไตล์มังงะญี่ปุ่น ลายเส้นหมึกชัดเจน ลงสีเรียบ": "1RbF5y8V5HUMBoLBKVGoFYkPCQRnTPUio",
+    "ภาพสไตล์จิบิ ตัวละครหัวโตตัวเล็ก น่ารัก": "1IbuZKlMGmm5TYGRs2Dw1Qy7X_hKiP-g3",
+    "ภาพแอนิเมชันญี่ปุ่นวาดมือ โทนอบอุ่น พื้นหลังธรรมชาติสีน้ำนุ่มนวล": "1ElQTgWr2LL1MQKgFBaW3WrIeo-3o93lc",
+    "ภาพสไตล์โมเอะ ตัวละครน่ารัก ตากลมโตเป็นประกาย สีพาสเทล": "1Oji7Xq8MWGfXoOkCtzkUzexJya11MaSQ",
+    "ภาพการ์ตูนญี่ปุ่นแนวโชเน็นและโชโจ เส้นมีพลัง แววตาเป็นประกาย": "1HfyCPn7pS_Gz1cm6TznUhY9Zfa6vKlMS",
+    "ภาพแอนิเมชัน 2 มิติวาดมือแบบคลาสสิกตะวันตก เส้นโค้งนุ่ม ตัวละครแสดงอารมณ์ชัดเจน": "1rpr-OXEHQsUva6QrEomv92zJ19kodwYu",
+    "ภาพแอนิเมชัน 3 มิติ ตัวละครกลมมน แสงเงานุ่มนวล สีสดใส": "1LRC08Z01Qs9BYTEqIQaHormmIPFMTGky",
+    "ภาพการ์ตูนย้อนยุคสไตล์ท่อยาง แขนขาโค้งเหมือนท่อ ตากลมดำ": "1dF6o5godeZiqsJyx_XluHiaY8hN0pSL6",
+    "ภาพสไตล์คอมิกส์อเมริกัน เส้นหมึกหนา สีจัด เงาเข้ม": "1iPwyke0FfUvTncg-FqKKqRpCL-_wXV9i",
+    "ภาพการ์ตูนซิทคอมตะวันตก เส้นเรียบง่าย สีพื้นเรียบ ตัวละครรูปทรงเรียบง่าย": "1xi4EE_KJu_PPP8uyAJ-b43fvdTWk8LiN",
+    "ภาพการ์ตูนมินิมอล ลายเส้นน้อย เรียบง่าย พื้นหลังโล่ง": "1YZbKVq5NUHvh7vsux2-YTsE-EA_ohe4l",
+    "ภาพกึ่งสมจริง": "1YtNyOKZoYyavdu08FPyiHZ6utChRsTqd",
+    "ภาพการ์ตูนล้อเลียน สัดส่วนเกินจริง หัวโต สีหน้าชัดเจน": "1ANbaSSqdskq8jh1C7jNBTbJsbmLEPwZU",
+    "ภาพสไตล์ป๊อปอาร์ต สีจัดจ้าน ลายจุด เส้นขอบหนา": "14IaBW1u19soVLe4gOIXN7A_x2bWWcHbH",
+    "ภาพสไตล์แฟลตดีไซน์ รูปทรงเรียบ สีพื้น ไม่มีแสงเงา": "15JP7LfUEjA6tYpFV54woWNvtMqZ4UG-g",
+    "ภาพสไตล์สติกเกอร์แชต ตัวละครน่ารัก เส้นขอบขาวหนา ท่าทางชัดเจน": "1xcQ-8O9W79s5sUnRQXJCeMglYEmjNgso",
+    "ภาพสไตล์พิกเซลอาร์ตแบบเกมย้อนยุค": "1HCcSDrvbixa-q76zcV9smwSh7Ca5TF5Z",
+    "ภาพสไตล์เวกเตอร์ เส้นคม สีเรียบ รูปทรงชัดเจน": "1a3BZ5ketxdoLHBYJfde9REOtcYw4Wkzr",
+    "ภาพสไตล์โลว์โพลี 3 มิติ ประกอบจากรูปเหลี่ยม": "1zx2m-f3OcMiRfAbXRT7zn6x9N8qHGvrs",
+    "ภาพสไตล์อาร์ตทอย ตัวละครเหมือนของเล่นไวนิล ผิวมันเงา": "1fFaszvpjJrCS3T9vTyfxOlDm_vFNaEkB",
+    "ภาพสไตล์ดินน้ำมัน 3 มิติ ผิวนุ่ม เห็นรอยปั้น": "17EeX_KFfVJ56L_wnqZCOFgVX0yo6Err_",
+    "ภาพสไตล์สต็อปโมชัน ตัวละครเหมือนหุ่นปั้น ฉากทำมือ": "1VFCp7tREPh1-fFfGWKieVfO4oH7OF3Rb",
+    "ภาพสีน้ำ โทนนุ่ม ขอบสีซึม": "1jFJK2gPTA_UoWiQw9MhQohHEMuNnNkj_",
+    "ภาพสีชอล์กและดินสอสี เส้นแบบเด็กวาด พื้นผิวกระดาษ": "1mq3nzEL2xCXLukj5jaKAQPKN1VtBgjnI",
+    "ภาพสไตล์กระดาษตัดแปะ ซ้อนชั้น เห็นขอบกระดาษ": "1WA-I1OUlMKQuB1jj5ABHi4Ab9RFNR-RP"
+  };
+
+  function driveImgUrl(id, size) {
+    return "https://drive.google.com/thumbnail?id=" + id + "&sz=" + (size || "w1000");
+  }
+
+  var artLabelMap = {};
   ART_STYLES.forEach(function (group) {
     var og = document.createElement("optgroup");
     og.label = group[0];
     group[1].forEach(function (st) {
       var o = document.createElement("option");
       o.textContent = st[0]; o.value = st[1];
+      artLabelMap[st[1]] = st[0];
       og.appendChild(o);
     });
     $("artStyle").appendChild(og);
@@ -916,6 +1061,55 @@
     o.textContent = "กำหนดเอง (พิมพ์ในช่องด้านล่าง)"; o.value = "__custom";
     $("artStyle").appendChild(o);
   })();
+
+  function renderArtThumbs() {
+    var box = $("artThumbs");
+    box.textContent = "";
+    var frag = document.createDocumentFragment();
+    ART_STYLES.forEach(function (group) {
+      group[1].forEach(function (st) {
+        var label = st[0], val = st[1], id = ART_IMAGES[val];
+        if (!id) { return; }
+        var btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "art-thumb-btn";
+        btn.setAttribute("data-art", val);
+        btn.setAttribute("aria-pressed", $("artStyle").value === val ? "true" : "false");
+        var img = document.createElement("img");
+        img.src = driveImgUrl(id, "w320");
+        img.alt = label;
+        img.loading = "lazy";
+        var span = document.createElement("span");
+        span.textContent = label;
+        btn.appendChild(img);
+        btn.appendChild(span);
+        frag.appendChild(btn);
+      });
+    });
+    box.appendChild(frag);
+  }
+
+  function updateArtPreview() {
+    var val = $("artStyle").value;
+    var box = $("artPreviewBox");
+    var id = ART_IMAGES[val];
+    if (!id || val === "__custom") {
+      box.hidden = true;
+      return;
+    }
+    box.hidden = false;
+    $("artPreviewTitle").textContent = "ตัวอย่างสไตล์: " + (artLabelMap[val] || val);
+    $("artPreviewDesc").textContent = "คำสั่ง Prompt: "" + val + """;
+    var img = $("artPreviewImg");
+    img.src = driveImgUrl(id, "w1000");
+    img.onerror = function () {
+      this.onerror = null;
+      this.src = "https://lh3.googleusercontent.com/d/" + id + "=w1000";
+    };
+    $("artThumbs").querySelectorAll(".art-thumb-btn").forEach(function (b) {
+      b.setAttribute("aria-pressed", b.getAttribute("data-art") === val ? "true" : "false");
+    });
+  }
 
   var GENDERS = [["", "ให้ AI กำหนด"], ["ชาย", "ชาย"], ["หญิง", "หญิง"], ["ไม่ระบุเพศ", "ไม่ระบุเพศ (เช่น สัตว์ สิ่งของ)"]];
 
@@ -1368,6 +1562,7 @@
     var artKnown = Array.prototype.some.call($("artStyle").options, function (o) { return o.value === v.art && o.value !== "__custom"; });
     $("artStyle").value = artKnown ? v.art : "__custom";
     $("artCustom").value = artKnown ? "" : (v.art || "");
+    updateArtPreview();
     selected = (v.vocab || []).slice();
     $("bankGrade").value = v.grade;
     populateSets();
@@ -1537,8 +1732,21 @@
     li.textContent = name;
     $("advisorLocked").appendChild(li);
   });
+  renderArtThumbs();
   $("artStyle").addEventListener("change", function () {
+    updateArtPreview();
     if (this.value === "__custom") { $("artCustom").focus(); }
+  });
+  $("btnToggleArtGrid").addEventListener("click", function () {
+    var g = $("artThumbs");
+    g.hidden = !g.hidden;
+    this.textContent = g.hidden ? "ดูภาพตัวอย่างทั้งหมด (26 แบบ)" : "ซ่อนแกลเลอรีภาพตัวอย่าง";
+  });
+  $("artThumbs").addEventListener("click", function (e) {
+    var b = e.target.closest(".art-thumb-btn");
+    if (!b) { return; }
+    $("artStyle").value = b.getAttribute("data-art");
+    updateArtPreview();
   });
   $("series").addEventListener("change", function () {
     var custom = this.value === "__custom";
