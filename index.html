@@ -732,7 +732,7 @@
               <button type="button" class="link" id="btnToggleArtGrid">ดูภาพตัวอย่างทั้งหมด (26 แบบ)</button>
             </div>
             <div class="art-preview-frame">
-              <img id="artPreviewImg" alt="ตัวอย่างรูปแบบภาพประกอบ" loading="lazy">
+              <img id="artPreviewImg" alt="ตัวอย่างรูปแบบภาพประกอบ" referrerpolicy="no-referrer" loading="lazy">
             </div>
             <p class="art-preview-desc" id="artPreviewDesc"></p>
             <div class="art-thumbs" id="artThumbs" hidden></div>
@@ -1041,7 +1041,23 @@
   };
 
   function driveImgUrl(id, size) {
-    return "https://drive.google.com/thumbnail?id=" + id + "&sz=" + (size || "w1000");
+    return "https://lh3.googleusercontent.com/d/" + id + "=" + (size || "w1000");
+  }
+
+  function setDriveImg(img, id, size) {
+    var sz = size || "w1000";
+    img.referrerPolicy = "no-referrer";
+    img.onerror = function () {
+      if (!this.dataset.fb) {
+        this.dataset.fb = "1";
+        this.src = "https://drive.google.com/thumbnail?id=" + id + "&sz=" + sz;
+      } else if (this.dataset.fb === "1") {
+        this.dataset.fb = "2";
+        this.src = "https://drive.google.com/uc?export=view&id=" + id;
+      }
+    };
+    delete img.dataset.fb;
+    img.src = driveImgUrl(id, sz);
   }
 
   var artLabelMap = {};
@@ -1076,7 +1092,7 @@
         btn.setAttribute("data-art", val);
         btn.setAttribute("aria-pressed", $("artStyle").value === val ? "true" : "false");
         var img = document.createElement("img");
-        img.src = driveImgUrl(id, "w320");
+        setDriveImg(img, id, "w320");
         img.alt = label;
         img.loading = "lazy";
         var span = document.createElement("span");
@@ -1099,13 +1115,9 @@
     }
     box.hidden = false;
     $("artPreviewTitle").textContent = "ตัวอย่างสไตล์: " + (artLabelMap[val] || val);
-    $("artPreviewDesc").textContent = "คำสั่ง Prompt: "" + val + """;
+    $("artPreviewDesc").textContent = "คำสั่ง Prompt: \"" + val + "\"";
     var img = $("artPreviewImg");
-    img.src = driveImgUrl(id, "w1000");
-    img.onerror = function () {
-      this.onerror = null;
-      this.src = "https://lh3.googleusercontent.com/d/" + id + "=w1000";
-    };
+    setDriveImg(img, id, "w1000");
     $("artThumbs").querySelectorAll(".art-thumb-btn").forEach(function (b) {
       b.setAttribute("aria-pressed", b.getAttribute("data-art") === val ? "true" : "false");
     });
